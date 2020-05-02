@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import os
-from typing import List
+from typing import List, Set
 
+import altair as alt
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials as Creds
 import pandas as pd
@@ -52,4 +53,22 @@ dollar_columns: List[str] = [
 pasta_df[dollar_columns] = pasta_df[dollar_columns].apply(pasta_str_to_float)
 pasta_df['Date'] = pasta_df['Date'].apply(
     lambda c: pd.to_datetime(c, infer_datetime_format=True)
+)
+
+alt.Chart(pasta_df).mark_line().encode(x='Date', y='Total')
+
+non_asset_cols: Set[str] = {
+    'Date', 'Notes', 'Change', 'Total', 'Student Loans', 'NFCU Credit Cards'
+}
+
+pasta_df_long = pd.melt(
+    pasta_df,
+    id_vars=['Date'],
+    value_vars=[c for c in pasta_df.columns if c not in non_asset_cols]
+)
+
+alt.Chart(pasta_df_long).mark_area().encode(
+    x='Date',
+    y='value',
+    color='variable'
 )
