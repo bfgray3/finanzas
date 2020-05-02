@@ -5,7 +5,8 @@ import sys
 from typing import Final, List
 
 import altair as alt
-import gspread
+from gspread.client import Client
+from gspread.models import Spreadsheet
 from oauth2client.service_account import ServiceAccountCredentials as Creds
 import pandas as pd
 
@@ -44,9 +45,9 @@ def main() -> int:
         find_creds_file(), CREDS_SCOPE
     )
 
-    client: gspread.client.Client = gspread.authorize(creds)
+    client: Client = gspread.authorize(creds)
 
-    balance_sheet: gspread.models.Spreadsheet = client.open('balance-sheet').sheet1
+    balance_sheet: Spreadsheet = client.open('balance-sheet').sheet1
 
     data: List[List[str]] = balance_sheet.get_all_values()
     # first row holds the column groupings, last row is in the future
