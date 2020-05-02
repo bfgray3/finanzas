@@ -8,6 +8,10 @@ from oauth2client.service_account import ServiceAccountCredentials as Creds
 import pandas as pd
 
 
+def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
+    return pd.to_numeric(pasta_str.str.replace('[$,]', ''))
+
+
 def find_creds_file() -> str:
     finanzas_dir: str = os.path.dirname(os.path.realpath(__file__))
     finanzas_dir_files: List[str] = os.listdir(finanzas_dir)
@@ -39,8 +43,12 @@ data: List[List[str]] = balance_sheet.get_all_values()
 data = data[1:-1]
 colnames: List[str] = data.pop(0)
 
-balance_sheet_df: pd.DataFrame = pd.DataFrame(data, columns=colnames)
-print(balance_sheet_df)
+pasta_df: pd.DataFrame = pd.DataFrame(data, columns=colnames)
 
+dollar_columns: List[str] = [
+    c for c in pasta_df.columns if c not in {'Date', 'Notes'}
+]
 
-# TODO: parse Date column as a date, rest except for Notes are dollars
+pasta_df[dollar_columns] = pasta_df[dollar_columns].apply(pasta_str_to_float)
+
+# TODO: parse Date column as a date
