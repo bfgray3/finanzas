@@ -50,5 +50,6 @@ dollar_columns: List[str] = [
 ]
 
 pasta_df[dollar_columns] = pasta_df[dollar_columns].apply(pasta_str_to_float)
-
-# TODO: parse Date column as a date
+pasta_df['Date'] = pasta_df['Date'].apply(
+    lambda c: pd.to_datetime(c, infer_datetime_format=True)
+)
