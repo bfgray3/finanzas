@@ -1,12 +1,25 @@
 #!/usr/bin/env python
 
 import os
-from typing import List, Set
+import sys
+from typing import Final, List
 
 import altair as alt
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials as Creds
 import pandas as pd
+
+
+NON_FLOAT_COLS: Final = {'Date', 'Notes'}
+
+NON_ASSET_COLS: Final = {
+    'Change', 'Total', 'Student Loans', 'NFCU Credit Cards'
+} | NON_FLOAT_COLS
+
+CREDS_SCOPE: Final = [
+    'https://spreadsheets.google.com/feeds',
+    'https://www.googleapis.com/auth/drive'
+]
 
 
 def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
@@ -26,49 +39,47 @@ def find_creds_file() -> str:
     return finanzas_dir_json[0]
 
 
-creds_scope: List[str] = [
-    'https://spreadsheets.google.com/feeds',
-    'https://www.googleapis.com/auth/drive'
-]
+def main() -> int:
+    creds: Creds = Creds.from_json_keyfile_name(
+        find_creds_file(), CREDS_SCOPE
+    )
 
-creds: Creds = Creds.from_json_keyfile_name(
-    find_creds_file(), creds_scope
-)
+    client: gspread.client.Client = gspread.authorize(creds)
 
-gc: gspread.client.Client = gspread.authorize(creds)  # TODO: rename
+    balance_sheet: gspread.models.Spreadsheet = client.open('balance-sheet').sheet1
 
-balance_sheet: gspread.models.Spreadsheet = gc.open('balance-sheet').sheet1
+    data: List[List[str]] = balance_sheet.get_all_values()
+    # first row holds the column groupings, last row is in the future
+    data = data[1:-1]
+    colnames: List[str] = data.pop(0)
 
-data: List[List[str]] = balance_sheet.get_all_values()
-# first row holds the column groupings, last row is in the future
-data = data[1:-1]
-colnames: List[str] = data.pop(0)
+    pasta_df: pd.DataFrame = pd.DataFrame(data, columns=colnames)
 
-pasta_df: pd.DataFrame = pd.DataFrame(data, columns=colnames)
+    dollar_columns: List[str] = [
+        c for c in pasta_df.columns if c not in NON_FLOAT_COLS
+    ]
 
-dollar_columns: List[str] = [
-    c for c in pasta_df.columns if c not in {'Date', 'Notes'}
-]
+    pasta_df[dollar_columns] = pasta_df[dollar_columns].apply(pasta_str_to_float)
+    pasta_df['Date'] = pasta_df['Date'].apply(
+        pd.to_datetime, infer_datetime_format=True
+    )
 
-pasta_df[dollar_columns] = pasta_df[dollar_columns].apply(pasta_str_to_float)
-pasta_df['Date'] = pasta_df['Date'].apply(
-    pd.to_datetime, infer_datetime_format=True
-)
+    alt.Chart(pasta_df).mark_line().encode(x='Date', y='Total')
 
-alt.Chart(pasta_df).mark_line().encode(x='Date', y='Total')
+    pasta_df_long: pd.DataFrame = pd.melt(
+        pasta_df,
+        id_vars=['Date'],
+        value_vars=[c for c in pasta_df.columns if c not in NON_ASSET_COLS]
+    )
 
-non_asset_cols: Set[str] = {
-    'Date', 'Notes', 'Change', 'Total', 'Student Loans', 'NFCU Credit Cards'
-}
+    alt.Chart(pasta_df_long).mark_area().encode(
+        x='Date',
+        y='value',
+        color='variable'
+    )
 
-pasta_df_long: pd.DataFrame = pd.melt(
-    pasta_df,
-    id_vars=['Date'],
-    value_vars=[c for c in pasta_df.columns if c not in non_asset_cols]
-)
+    return 0
 
-alt.Chart(pasta_df_long).mark_area().encode(
-    x='Date',
-    y='value',
-    color='variable'
-)
+
+if __name__ == '__main__':
+    sys.exit(main())
