@@ -1,0 +1,4 @@
+altair
+gspread
+oauth2client
+pandas
