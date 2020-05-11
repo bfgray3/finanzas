@@ -5,6 +5,7 @@ import sys
 from typing import Final, List
 
 import altair as alt
+from gspread import authorize
 from gspread.client import Client
 from gspread.models import Spreadsheet
 from oauth2client.service_account import ServiceAccountCredentials as Creds
@@ -45,7 +46,7 @@ def main() -> int:
         find_creds_file(), CREDS_SCOPE
     )
 
-    client: Client = gspread.authorize(creds)
+    client: Client = authorize(creds)
 
     balance_sheet: Spreadsheet = client.open('balance-sheet').sheet1
 
@@ -56,11 +57,11 @@ def main() -> int:
 
     pasta_df: pd.DataFrame = pd.DataFrame(data, columns=colnames)
 
-    dollar_columns: List[str] = [
+    dollar_cols: List[str] = [
         c for c in pasta_df.columns if c not in NON_FLOAT_COLS
     ]
 
-    pasta_df[dollar_columns] = pasta_df[dollar_columns].apply(pasta_str_to_float)
+    pasta_df[dollar_cols] = pasta_df[dollar_cols].apply(pasta_str_to_float)
     pasta_df['Date'] = pasta_df['Date'].apply(
         pd.to_datetime, infer_datetime_format=True
     )
@@ -72,6 +73,7 @@ def main() -> int:
         id_vars=['Date'],
         value_vars=[c for c in pasta_df.columns if c not in NON_ASSET_COLS]
     )
+    print(pasta_df_long)
 
     alt.Chart(pasta_df_long).mark_area().encode(
         x='Date',
