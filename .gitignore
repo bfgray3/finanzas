@@ -2,3 +2,6 @@
 .ipynb_checkpoints/
 /**/*.ipynb
 /**/*.png
+plots/
+.DS_Store
+/**/*.log
