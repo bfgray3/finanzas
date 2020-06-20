@@ -55,6 +55,7 @@ def get_df_from_sheets(
         "https://www.googleapis.com/auth/drive",
     ),
 ) -> pd.DataFrame:
+    # https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
     creds: Creds = Creds.from_json_keyfile_name(find_creds_file(), creds_scope)
 
     client: Client = authorize(creds)
