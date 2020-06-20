@@ -3,7 +3,7 @@
 from datetime import datetime
 import os
 import sys
-from typing import Final, Tuple, Set
+from typing import Final, List, Tuple, Set
 
 import altair as alt
 from gspread import authorize
@@ -23,11 +23,6 @@ NON_ASSET_COLS: Final[Set[str]] = {
     "Student Loans",
     "NFCU Credit Cards",
 } | NON_FLOAT_COLS
-
-CREDS_SCOPE: Tuple[str, str] = (
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive",
-)
 
 
 def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
@@ -53,35 +48,50 @@ def save_chart(chart: alt.Chart, filename: str) -> None:
     chart.save(f"plots/{TODAY}-{filename}")
 
 
-def main() -> int:
-    creds: Creds = Creds.from_json_keyfile_name(find_creds_file(), CREDS_SCOPE)
+def get_df_from_sheets(
+    sheet_name: str = "balance-sheet",
+    creds_scope: Tuple[str, str] = (
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ),
+) -> pd.DataFrame:
+    creds: Creds = Creds.from_json_keyfile_name(find_creds_file(), creds_scope)
 
     client: Client = authorize(creds)
 
-    balance_sheet: Spreadsheet = client.open("balance-sheet").sheet1
+    balance_sheet: Spreadsheet = client.open(sheet_name).sheet1
 
     data: List[List[str]] = balance_sheet.get_all_values()
     # first row holds the column groupings, last row is in the future
     data = data[1:-1]
     colnames: List[str] = data.pop(0)
 
-    pasta_df: pd.DataFrame = pd.DataFrame(data, columns=colnames)
+    return pd.DataFrame(data, columns=colnames)
 
-    dollar_cols: List[str] = [c for c in pasta_df.columns if c not in NON_FLOAT_COLS]
 
-    pasta_df[dollar_cols] = pasta_df[dollar_cols].apply(pasta_str_to_float)
-    pasta_df["Date"] = pasta_df["Date"].apply(
-        pd.to_datetime, infer_datetime_format=True
-    )
+def format_df(df: pd.DataFrame) -> pd.DataFrame:
+    dollar_cols: List[str] = [c for c in df.columns if c not in NON_FLOAT_COLS]
+
+    df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
+    df["Date"] = df["Date"].apply(pd.to_datetime, infer_datetime_format=True)
+
+    return df
+
+
+def main() -> int:
+    pasta_df: pd.DataFrame = get_df_from_sheets()
+
+    formatted_df: pd.DataFrame = format_df(pasta_df)
 
     save_chart(
-        alt.Chart(pasta_df).mark_line().encode(x="Date", y="Total"), "net-worth.html"
+        alt.Chart(formatted_df).mark_line().encode(x="Date", y="Total"),
+        "net-worth.html",
     )
 
     pasta_df_long: pd.DataFrame = pd.melt(
-        pasta_df,
+        formatted_df,
         id_vars=["Date"],
-        value_vars=[c for c in pasta_df.columns if c not in NON_ASSET_COLS],
+        value_vars=[c for c in formatted_df.columns if c not in NON_ASSET_COLS],
     )
 
     save_chart(
