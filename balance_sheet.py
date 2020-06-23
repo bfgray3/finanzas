@@ -74,8 +74,9 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
     dollar_cols: List[str] = [c for c in df.columns if c not in NON_FLOAT_COLS]
 
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
-    df["Date"] = df["Date"].apply(pd.to_datetime, infer_datetime_format=True)
-
+    df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
+    df.dropna(subset=["Date"], inplace=True)
+    breakpoint()
     return df
 
 
