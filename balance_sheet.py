@@ -39,10 +39,15 @@ def find_creds_file() -> str:
     return finanzas_dir_json[0]
 
 
-def save_chart(chart: alt.Chart, filename: str) -> None:
-    # TODO: remove old plots??
-    if not os.path.exists("plots"):
-        os.mkdir("plots")
+def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
+    if not os.path.exists(subdir):
+        os.mkdir(subdir)
+    else:
+        for old_plot in os.listdir(subdir):
+            try:
+                os.unlink(os.path.join(old_plot, filename))
+            except Exception:
+                pass
     chart.save(f"plots/{TODAY}-{filename}")
 
 
