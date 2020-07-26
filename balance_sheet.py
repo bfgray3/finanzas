@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 
-from datetime import datetime
 import os
 import sys
-from typing import Final, List, Tuple, Set
+from datetime import datetime
+from typing import Final, Set, Tuple
 
 import altair as alt
-from gspread import authorize
-from gspread.client import Client
-from gspread.models import Spreadsheet
-from oauth2client.service_account import ServiceAccountCredentials as Creds
 import pandas as pd
-
+from gspread import authorize
+from oauth2client.service_account import ServiceAccountCredentials as Creds
 
 TODAY: str = datetime.now().strftime("%Y-%m-%d")
 
@@ -30,9 +27,9 @@ def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
 
 
 def find_creds_file() -> str:
-    finanzas_dir: str = os.path.dirname(os.path.realpath(__file__))
-    finanzas_dir_files: List[str] = os.listdir(finanzas_dir)
-    finanzas_dir_json: List[str] = [
+    finanzas_dir = os.path.dirname(os.path.realpath(__file__))
+    finanzas_dir_files = os.listdir(finanzas_dir)
+    finanzas_dir_json = [
         f for f in finanzas_dir_files if f.endswith(".json")
     ]
     if len(finanzas_dir_json) > 1:
@@ -43,6 +40,7 @@ def find_creds_file() -> str:
 
 
 def save_chart(chart: alt.Chart, filename: str) -> None:
+    # TODO: remove old plots??
     if not os.path.exists("plots"):
         os.mkdir("plots")
     chart.save(f"plots/{TODAY}-{filename}")
@@ -56,22 +54,22 @@ def get_df_from_sheets(
     ),
 ) -> pd.DataFrame:
     # https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
-    creds: Creds = Creds.from_json_keyfile_name(find_creds_file(), creds_scope)
+    creds = Creds.from_json_keyfile_name(find_creds_file(), creds_scope)
 
-    client: Client = authorize(creds)
+    client = authorize(creds)
 
-    balance_sheet: Spreadsheet = client.open(sheet_name).sheet1
+    balance_sheet = client.open(sheet_name).sheet1
 
-    data: List[List[str]] = balance_sheet.get_all_values()
+    data = balance_sheet.get_all_values()
     # first row holds the column groupings, last row is in the future
     data = data[1:-1]
-    colnames: List[str] = data.pop(0)
+    colnames = data.pop(0)
 
     return pd.DataFrame(data, columns=colnames)
 
 
 def format_df(df: pd.DataFrame) -> pd.DataFrame:
-    dollar_cols: List[str] = [c for c in df.columns if c not in NON_FLOAT_COLS]
+    dollar_cols = [c for c in df.columns if c not in NON_FLOAT_COLS]
 
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
@@ -80,16 +78,17 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> int:
-    pasta_df: pd.DataFrame = get_df_from_sheets()
+    # TODO: update axis labels on plots
+    pasta_df = get_df_from_sheets()
 
-    formatted_df: pd.DataFrame = format_df(pasta_df)
+    formatted_df = format_df(pasta_df)
 
     save_chart(
         alt.Chart(formatted_df).mark_line().encode(x="Date", y="Total"),
         "net-worth.html",
     )
 
-    pasta_df_long: pd.DataFrame = pd.melt(
+    pasta_df_long = pd.melt(
         formatted_df,
         id_vars=["Date"],
         value_vars=[c for c in formatted_df.columns if c not in NON_ASSET_COLS],
