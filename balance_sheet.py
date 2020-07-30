@@ -29,14 +29,10 @@ def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
 def find_creds_file() -> str:
     finanzas_dir = os.path.dirname(os.path.realpath(__file__))
     finanzas_dir_files = os.listdir(finanzas_dir)
-    finanzas_dir_json = [
+    creds_file, = [
         f for f in finanzas_dir_files if f.endswith(".json")
     ]
-    if len(finanzas_dir_json) > 1:
-        raise RuntimeError(
-            "more than one JSON file found; not sure which is the config."
-        )
-    return finanzas_dir_json[0]
+    return creds_file
 
 
 def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
@@ -44,16 +40,17 @@ def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
         os.mkdir(subdir)
     else:
         for old_plot in os.listdir(subdir):
-            try:
-                os.unlink(os.path.join(old_plot, filename))
-            except Exception:
-                pass
+            if TODAY not in old_plot:
+                try:
+                    os.unlink(os.path.join(subdir, old_plot))
+                except Exception:
+                    pass
     chart.save(f"plots/{TODAY}-{filename}")
 
 
 def get_df_from_sheets(
     sheet_name: str = "balance-sheet",
-    creds_scope: Tuple[str, str] = (
+    creds_scope: Tuple[str, ...] = (
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
     ),
