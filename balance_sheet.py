@@ -2,6 +2,7 @@
 
 import os
 import sys
+from contextlib import suppress
 from datetime import datetime
 from typing import Final, Set, Tuple
 
@@ -39,10 +40,8 @@ def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
     else:
         for old_plot in os.listdir(subdir):
             if TODAY not in old_plot:
-                try:
+                with suppress(Exception):
                     os.unlink(os.path.join(subdir, old_plot))
-                except Exception:
-                    pass
     chart.save(f"plots/{TODAY}-{filename}")
 
 
@@ -78,7 +77,7 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> int:
-    # TODO: update axis labels on plots
+
     pasta_df = get_df_from_sheets()
 
     formatted_df = format_df(pasta_df)
