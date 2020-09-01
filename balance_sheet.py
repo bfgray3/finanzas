@@ -29,9 +29,7 @@ def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
 def find_creds_file() -> str:
     finanzas_dir = os.path.dirname(os.path.realpath(__file__))
     finanzas_dir_files = os.listdir(finanzas_dir)
-    creds_file, = [
-        f for f in finanzas_dir_files if f.endswith(".json")
-    ]
+    (creds_file,) = filter(lambda f: f.endswith(".json"), finanzas_dir_files)
     return creds_file
 
 
@@ -84,6 +82,11 @@ def main() -> int:
     pasta_df = get_df_from_sheets()
 
     formatted_df = format_df(pasta_df)
+
+    save_chart(
+        alt.Chart(formatted_df).mark_line().encode(x="Date", y="Change"),
+        "monthly-changes.html",
+    )
 
     save_chart(
         alt.Chart(formatted_df).mark_line().encode(x="Date", y="Total"),
