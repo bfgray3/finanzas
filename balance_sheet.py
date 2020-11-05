@@ -3,24 +3,29 @@
 import os
 import sys
 from contextlib import suppress
-from datetime import datetime
-from typing import Final, Set, Tuple
+from datetime import date
+from typing import FrozenSet, Tuple
 
 import altair as alt
 import pandas as pd
 from gspread import authorize
 from oauth2client.service_account import ServiceAccountCredentials as Creds
 
-TODAY: str = datetime.now().strftime("%Y-%m-%d")
+TODAY: str = date.today().strftime("%Y-%m-%d")
 
-NON_FLOAT_COLS: Final[Set[str]] = {"Date", "Notes"}
+NON_FLOAT_COLS: FrozenSet[str] = frozenset(("Date", "Notes"))
 
-NON_ASSET_COLS: Final[Set[str]] = {
-    "Change",
-    "Total",
-    "Student Loans",
-    "NFCU Credit Cards",
-} | NON_FLOAT_COLS
+NON_ASSET_COLS: FrozenSet[str] = (
+    frozenset(
+        (
+            "Change",
+            "Total",
+            "Student Loans",
+            "NFCU Credit Cards",
+        )
+    )
+    | NON_FLOAT_COLS
+)
 
 
 def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
@@ -37,11 +42,11 @@ def find_creds_file() -> str:
 def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
     if not os.path.exists(subdir):
         os.mkdir(subdir)
-    else:
-        for old_plot in os.listdir(subdir):
-            if TODAY not in old_plot:
-                with suppress(Exception):
-                    os.unlink(os.path.join(subdir, old_plot))
+    # get rid of old plots on disk
+    for old_plot in os.listdir(subdir):
+        if TODAY not in old_plot:
+            with suppress(Exception):
+                os.unlink(os.path.join(subdir, old_plot))
     chart.save(f"plots/{TODAY}-{filename}")
 
 
@@ -73,6 +78,7 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
     df.dropna(subset=["Date"], inplace=True)
+    # df["Change"].rolling(2).mean()
     return df
 
 
