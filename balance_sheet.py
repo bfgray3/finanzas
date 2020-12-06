@@ -4,18 +4,18 @@ import os
 import sys
 from contextlib import suppress
 from datetime import date
-from typing import FrozenSet, Tuple
+from typing import Tuple
 
 import altair as alt
 import pandas as pd
 from gspread import authorize
 from oauth2client.service_account import ServiceAccountCredentials as Creds
 
-TODAY: str = date.today().strftime("%Y-%m-%d")
+TODAY = date.today().strftime("%Y-%m-%d")
 
-NON_FLOAT_COLS: FrozenSet[str] = frozenset(("Date", "Notes"))
+NON_FLOAT_COLS = frozenset(("Date", "Notes"))
 
-NON_ASSET_COLS: FrozenSet[str] = (
+NON_ASSET_COLS = (
     frozenset(
         (
             "Change",
