@@ -20,8 +20,8 @@ NON_ASSET_COLS = (
         (
             "Change",
             "Total",
-            "Student Loans",
-            "NFCU Credit Cards",
+            "StudentLoans",
+            "CreditCards",
         )
     )
     | NON_FLOAT_COLS
@@ -78,6 +78,7 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
     df.dropna(subset=["Date"], inplace=True)
+    df.drop(columns="Notes", inplace=True)
     # df["Change"].rolling(2).mean()
     return df
 
