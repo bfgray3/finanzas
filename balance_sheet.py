@@ -78,8 +78,6 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
 
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
-    df["ThreePeriodMeanChange"] = df["Change"].rolling(3).mean()
-    df.dropna(subset=["Date"], inplace=True)
 
     return df
 
@@ -109,7 +107,9 @@ def main() -> int:
     )
 
     rolling_change_long_df = pd.melt(
-        formatted_df,
+        formatted_df.assign(
+            ThreePeriodMeanChange=formatted_df["Change"].rolling(3).mean()
+        ),
         id_vars=["Date"],
         value_vars=["Change", "ThreePeriodMeanChange"],
     )
