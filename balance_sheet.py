@@ -65,8 +65,9 @@ def get_df_from_sheets(
     balance_sheet = client.open(sheet_name).sheet1
 
     data = balance_sheet.get_all_values()
-    # first row holds the column groupings, last row is in the future
-    data = data[1:-1]
+    # first row holds the column groupings
+    # make sure we have a date for the row
+    data = [x for x in data[1:] if x[0] != ""]
     colnames = data.pop(0)
 
     return pd.DataFrame(data, columns=colnames)
@@ -77,6 +78,7 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
 
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
+    df["ThreePeriodMeanChange"] = df["Change"].rolling(3).mean()
     df.dropna(subset=["Date"], inplace=True)
 
     return df
@@ -87,11 +89,6 @@ def main() -> int:
     pasta_df = get_df_from_sheets()
 
     formatted_df = format_df(pasta_df)
-
-    save_chart(
-        alt.Chart(formatted_df).mark_line().encode(x="Date", y="Change"),
-        "monthly-changes.html",
-    )
 
     save_chart(
         alt.Chart(formatted_df).mark_line().encode(x="Date", y="Total"),
@@ -109,6 +106,23 @@ def main() -> int:
         .mark_area()
         .encode(x="Date", y="value", color="variable"),
         "asset-breakdown.html",
+    )
+
+    rolling_change_long_df = pd.melt(
+        formatted_df,
+        id_vars=["Date"],
+        value_vars=["Change", "ThreePeriodMeanChange"],
+    )
+
+    save_chart(
+        alt.Chart(rolling_change_long_df)
+        .mark_line()
+        .encode(
+            x="Date",
+            y="value",
+            color="variable",
+        ),
+        "monthly-changes.html",
     )
 
     return 0
