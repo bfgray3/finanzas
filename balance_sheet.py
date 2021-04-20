@@ -4,7 +4,6 @@ import os
 import sys
 from contextlib import suppress
 from datetime import date
-from typing import Tuple
 
 import altair as alt
 import pandas as pd
@@ -52,7 +51,7 @@ def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
 
 def get_df_from_sheets(
     sheet_name: str = "balance-sheet",
-    creds_scope: Tuple[str, ...] = (
+    creds_scope: tuple[str, ...] = (
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
     ),
@@ -67,7 +66,7 @@ def get_df_from_sheets(
     data = balance_sheet.get_all_values()
     # first row holds the column groupings
     # make sure we have a date for the row
-    data = [x for x in data[1:] if x[0] != ""]
+    data = [x for x in data[1:] if x[0]]
     colnames = data.pop(0)
 
     return pd.DataFrame(data, columns=colnames)
