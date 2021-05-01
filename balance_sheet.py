@@ -107,10 +107,10 @@ def main() -> int:
 
     rolling_change_long_df = pd.melt(
         formatted_df.assign(
-            ThreePeriodMeanChange=formatted_df["Change"].rolling(3).mean()
+            SixPeriodMeanChange=formatted_df["Change"].rolling(6).mean()
         ),
         id_vars=["Date"],
-        value_vars=["Change", "ThreePeriodMeanChange"],
+        value_vars=["Change", "SixPeriodMeanChange"],
     )
 
     save_chart(
