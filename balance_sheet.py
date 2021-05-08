@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import date
 
 import altair as alt
+import numpy as np
 import pandas as pd
 from gspread import authorize
 from oauth2client.service_account import ServiceAccountCredentials as Creds
@@ -78,6 +79,11 @@ def format_df(df: pd.DataFrame) -> pd.DataFrame:
     df[dollar_cols] = df[dollar_cols].apply(pasta_str_to_float)
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
 
+    previous_month = df["Total"].shift()
+    df["PercentChange"] = np.where(
+        previous_month >= 0, df["Total"] / previous_month - 1, np.nan
+    )
+
     return df
 
 
@@ -86,6 +92,11 @@ def main() -> int:
     pasta_df = get_df_from_sheets()
 
     formatted_df = format_df(pasta_df)
+
+    save_chart(
+        alt.Chart(formatted_df).mark_line().encode(x="Date", y="PercentChange"),
+        "monthly-net-worth-percent-change.html",
+    )
 
     save_chart(
         alt.Chart(formatted_df).mark_line().encode(x="Date", y="Total"),
