@@ -46,7 +46,7 @@ def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
         if TODAY not in old_plot:
             with suppress(Exception):
                 os.unlink(os.path.join(subdir, old_plot))
-    chart.save(f"plots/{TODAY}-{filename}")
+    chart.save(os.path.join("plots", f"{TODAY}-{filename}"))
 
 
 def get_df_from_sheets(
