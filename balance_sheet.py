@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import glob
 import os
 import sys
 from contextlib import suppress
@@ -33,8 +34,7 @@ def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
 
 def find_creds_file() -> str:
     finanzas_dir = os.path.dirname(os.path.realpath(__file__))
-    finanzas_dir_files = os.listdir(finanzas_dir)
-    (creds_file,) = filter(lambda f: f.endswith(".json"), finanzas_dir_files)
+    (creds_file,) = glob.glob(os.path.join(finanzas_dir, "*.json"))
     return creds_file
 
 
