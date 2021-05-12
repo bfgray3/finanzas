@@ -44,7 +44,7 @@ def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
     # get rid of old plots on disk
     for old_plot in os.listdir(subdir):
         if TODAY not in old_plot:
-            with suppress(Exception):
+            with suppress(OSError):
                 os.unlink(os.path.join(subdir, old_plot))
     chart.save(os.path.join("plots", f"{TODAY}-{filename}"))
 
