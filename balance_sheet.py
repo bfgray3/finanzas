@@ -94,12 +94,19 @@ def main() -> int:
     formatted_df = format_df(pasta_df)
 
     save_chart(
-        alt.Chart(formatted_df).mark_line().encode(x="Date", y="PercentChange"),
+        alt.Chart(formatted_df)
+        .mark_line()
+        .encode(
+            x="Date",
+            y=alt.Y("PercentChange", axis=alt.Axis(format="%", title="Percent Change")),
+        ),
         "monthly-net-worth-percent-change.html",
     )
 
     save_chart(
-        alt.Chart(formatted_df).mark_line().encode(x="Date", y="Total"),
+        alt.Chart(formatted_df)
+        .mark_line()
+        .encode(x="Date", y=alt.Y("Total", axis=alt.Axis(format="$", title="Amount"))),
         "net-worth.html",
     )
 
@@ -112,7 +119,11 @@ def main() -> int:
     save_chart(
         alt.Chart(pasta_df_long)
         .mark_area()
-        .encode(x="Date", y="value", color="variable"),
+        .encode(
+            x="Date",
+            y=alt.Y("value", axis=alt.Axis(format="$", title="Amount")),
+            color=alt.Color("variable", legend=alt.Legend(title="Asset type")),
+        ),
         "asset-breakdown.html",
     )
 
@@ -129,8 +140,8 @@ def main() -> int:
         .mark_line()
         .encode(
             x="Date",
-            y="value",
-            color="variable",
+            y=alt.Y("value", axis=alt.Axis(format="$", title="Change")),
+            color=alt.Color("variable", legend=alt.Legend(title="Series")),
         ),
         "monthly-changes.html",
     )
