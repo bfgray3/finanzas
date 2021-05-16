@@ -1,9 +1,9 @@
 #!/usr/bin/env python
+import contextlib
+import datetime
 import glob
 import os
 import sys
-from contextlib import suppress
-from datetime import date
 
 import altair as alt
 import numpy as np
@@ -11,7 +11,9 @@ import pandas as pd
 from gspread import authorize
 from oauth2client.service_account import ServiceAccountCredentials as Creds
 
-TODAY = date.today().strftime("%Y-%m-%d")
+TODAY = datetime.date.today().strftime("%Y-%m-%d")
+
+FINANZAS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 NON_FLOAT_COLS = frozenset(("Date", "Notes"))
 
@@ -33,8 +35,7 @@ def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
 
 
 def find_creds_file() -> str:
-    finanzas_dir = os.path.dirname(os.path.realpath(__file__))
-    (creds_file,) = glob.glob(os.path.join(finanzas_dir, "*.json"))
+    (creds_file,) = glob.glob(os.path.join(FINANZAS_DIR, "*.json"))
     return creds_file
 
 
@@ -44,9 +45,9 @@ def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
     # get rid of old plots on disk
     for old_plot in os.listdir(subdir):
         if TODAY not in old_plot:
-            with suppress(OSError):
+            with contextlib.suppress(OSError):
                 os.unlink(os.path.join(subdir, old_plot))
-    chart.save(os.path.join("plots", f"{TODAY}-{filename}"))
+    chart.save(os.path.join(FINANZAS_DIR, "plots", f"{TODAY}-{filename}"))
 
 
 def get_df_from_sheets(

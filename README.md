@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains a tool to track my personal finances from month to month.
+This repository contains a script to track my personal finances from month to month.
 
 ## Usage
 
