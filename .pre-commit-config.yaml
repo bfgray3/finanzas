@@ -1,10 +1,12 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.0.1
     hooks:
     -   id: check-builtin-literals
         args: [--no-allow-dict-kwargs]
+    -   id: check-executables-have-shebangs
     -   id: check-merge-conflict
+    -   id: check-shebang-scripts-are-executable
     -   id: debug-statements
     -   id: end-of-file-fixer
     -   id: requirements-txt-fixer
