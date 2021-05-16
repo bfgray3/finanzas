@@ -13,8 +13,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 TODAY = datetime.date.today().strftime("%Y-%m-%d")
 
-FINANZAS_DIR = os.path.dirname(os.path.realpath(__file__))
-
 NON_FLOAT_COLS = frozenset(("Date", "Notes"))
 
 NON_ASSET_COLS = (
@@ -29,6 +27,18 @@ NON_ASSET_COLS = (
     | NON_FLOAT_COLS
 )
 
+FINANZAS_DIR = os.path.dirname(os.path.realpath(__file__))
+
+PLOTS_DIR = os.path.join(FINANZAS_DIR, "plots")
+
+if not os.path.exists(PLOTS_DIR):
+    os.mkdir(PLOTS_DIR)
+
+for old_plot in os.listdir(PLOTS_DIR):
+    if TODAY not in old_plot:
+        with contextlib.suppress(OSError):
+            os.unlink(os.path.join(PLOTS_DIR, old_plot))
+
 
 def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
     return pd.to_numeric(pasta_str.str.replace("[$,]", "", regex=True))
@@ -39,15 +49,9 @@ def find_creds_file() -> str:
     return creds_file
 
 
-def save_chart(chart: alt.Chart, filename: str, subdir: str = "plots") -> None:
-    if not os.path.exists(subdir):
-        os.mkdir(subdir)
+def save_chart(chart: alt.Chart, filename: str) -> None:
     # get rid of old plots on disk
-    for old_plot in os.listdir(subdir):
-        if TODAY not in old_plot:
-            with contextlib.suppress(OSError):
-                os.unlink(os.path.join(subdir, old_plot))
-    chart.save(os.path.join(FINANZAS_DIR, "plots", f"{TODAY}-{filename}"))
+    chart.save(os.path.join(PLOTS_DIR, f"{TODAY}-{filename}"))
 
 
 def get_df_from_sheets(
