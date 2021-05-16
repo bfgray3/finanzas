@@ -6,10 +6,10 @@ import os
 import sys
 
 import altair as alt
+import gspread
 import numpy as np
 import pandas as pd
-from gspread import authorize
-from oauth2client.service_account import ServiceAccountCredentials as Creds
+from oauth2client.service_account import ServiceAccountCredentials
 
 TODAY = datetime.date.today().strftime("%Y-%m-%d")
 
@@ -58,9 +58,11 @@ def get_df_from_sheets(
     ),
 ) -> pd.DataFrame:
     # https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
-    creds = Creds.from_json_keyfile_name(find_creds_file(), creds_scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(
+        find_creds_file(), creds_scope
+    )
 
-    client = authorize(creds)
+    client = gspread.authorize(creds)
 
     balance_sheet = client.open(sheet_name).sheet1
 
