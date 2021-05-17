@@ -38,6 +38,7 @@ if not os.path.exists(PLOTS_DIR):
         sys.exit("Unable to make directory for plots.")
 
 with contextlib.suppress(OSError):
+    # get rid of old plots on disk
     for old_plot in os.listdir(PLOTS_DIR):
         if TODAY not in old_plot:
             os.unlink(os.path.join(PLOTS_DIR, old_plot))
@@ -53,7 +54,6 @@ def find_creds_file() -> str:
 
 
 def save_chart(chart: alt.Chart, filename: str) -> None:
-    # get rid of old plots on disk
     chart.save(os.path.join(PLOTS_DIR, f"{TODAY}-{filename}"))
 
 
