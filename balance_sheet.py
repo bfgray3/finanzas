@@ -32,11 +32,14 @@ FINANZAS_DIR = os.path.dirname(os.path.realpath(__file__))
 PLOTS_DIR = os.path.join(FINANZAS_DIR, "plots")
 
 if not os.path.exists(PLOTS_DIR):
-    os.mkdir(PLOTS_DIR)
+    try:
+        os.mkdir(PLOTS_DIR)
+    except OSError:
+        sys.exit("Unable to make directory for plots.")
 
-for old_plot in os.listdir(PLOTS_DIR):
-    if TODAY not in old_plot:
-        with contextlib.suppress(OSError):
+with contextlib.suppress(OSError):
+    for old_plot in os.listdir(PLOTS_DIR):
+        if TODAY not in old_plot:
             os.unlink(os.path.join(PLOTS_DIR, old_plot))
 
 
