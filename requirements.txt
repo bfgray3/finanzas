@@ -1,4 +1,5 @@
 altair
 gspread
+numpy
 oauth2client
 pandas
