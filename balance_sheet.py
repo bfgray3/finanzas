@@ -4,6 +4,7 @@ import datetime
 import glob
 import os
 import sys
+import webbrowser
 
 import altair as alt
 import gspread
@@ -39,9 +40,9 @@ if not os.path.exists(PLOTS_DIR):
 
 with contextlib.suppress(OSError):
     # get rid of old plots on disk
-    for old_plot in os.listdir(PLOTS_DIR):
-        if TODAY not in old_plot:
-            os.unlink(os.path.join(PLOTS_DIR, old_plot))
+    for plot in os.listdir(PLOTS_DIR):
+        if TODAY not in plot:
+            os.unlink(os.path.join(PLOTS_DIR, plot))
 
 
 def pasta_str_to_float(pasta_str: pd.Series) -> pd.Series:
@@ -154,6 +155,9 @@ def main() -> int:
         ),
         "monthly-changes.html",
     )
+
+    for plot in os.listdir(PLOTS_DIR):
+        webbrowser.open(os.path.join(f"file://{PLOTS_DIR}", plot))
 
     return 0
 
