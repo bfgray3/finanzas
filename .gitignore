@@ -1,7 +1,8 @@
-/**/*.json
+*.json
 .ipynb_checkpoints/
-/**/*.ipynb
-/**/*.png
+*.ipynb
+*.png
 plots/
 .DS_Store
-/**/*.log
+*.log
+*.pyc
